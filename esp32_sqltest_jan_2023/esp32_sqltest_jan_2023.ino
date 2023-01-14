@@ -16,7 +16,8 @@ SHT31 sht;
 bool enableHeater = false;
 uint32_t start;
 uint32_t stop;
-// B) MySQL
+
+// +++ MySQL
 char INSERT_TEMPHMD[] = "INSERT INTO %s.%s (device_id, temp_data, hmd_data) VALUES (%d, %s, %s)";
 float float_tempReading, float_humidityReading;
 char query1[100];
@@ -24,6 +25,7 @@ char temp_char[10];
 char hmd_char[10];
 
 byte device_id = 1;
+
 // Initialize MySQL_MariaDB_Generic library
 MySQL_Connection conn((Client *)&client);
 MySQL_Query *query_mem;
@@ -47,8 +49,6 @@ void setup() {
     delay(500);
     MYSQL_DISPLAY0(".");
   }
-
-
   MYSQL_DISPLAY1("Connected to network. My IP address is:", WiFi.localIP());
   MYSQL_DISPLAY3("Connecting to SQL Server @", server_addr, ", Port =", server_port);
   MYSQL_DISPLAY5("User =", user, ", PW =", password, ", DB =", database);

@@ -1,13 +1,13 @@
 #ifndef Credentials_h
 #define Credentials_h
 
-#define USING_HOST_NAME           true
+#define USING_HOST_NAME           false
 
 #if USING_HOST_NAME
   // char server_addr[] = "raspberrypi.local";
   char server_addr[] = "asusx505za.local";
 #else
-  IPAddress server_addr(192, 168, 1, 141);
+  IPAddress server_addr(192, 168, 254, 104);
 #endif
 
 uint16_t server_port = 3306;
@@ -21,8 +21,7 @@ char password[]     = "arduino";          // MySQL user login password
 char database[] = "adnu_acrms_4";
 
 char table1[]  = "data_temp_hmd";
-char table2[]  = "data_gas";
+char table2[]  = "data_acc";
 char table3[]  = "data_amp";
-char table4[]  = "data_acc";
-
+char table4[]  = "data_gas";
 #endif    //Credentials_h
