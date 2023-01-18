@@ -1,16 +1,16 @@
 // Integrated data gathering module
-// Board: ESP32 Development Kit
+// Board: ESP32 Dev Module
+// Using espressif/arduino-esp32 2.0.5
 // Updated: January 2023
 // Created by: Johannes Unana, Melvin Sta. Rosa
 
 #include <Wire.h>                 // I2C 
-#include <SHT31.h>                // RobTillaart/SHT31
+#include <SHT31.h>                // RobTillaart/SHT31 0.3.7
 #include <Adafruit_ADXL345_U.h>   // adafruit/Adafruit_ADXL345 1.3.2
 #include <ACS712.h>               // RobTillaart/ACS712 0.3.4
 #include <MySQL_Generic.h>        // khoih-prog/MySQL_MariaDB_Generic 1.7.2
 #include "Credentials.h"
 #include "Defines.h"
-#include <math.h>
 
 void setup() {
   Serial.begin(115200);
@@ -19,20 +19,21 @@ void setup() {
   Wire.begin();
   Wire.setClock(100000);
 
-  // start SHT31
-  sht.begin(SHT31_ADDRESS);
-  uint16_t stat = sht.readStatus();
-  Serial.println();
+  //  // start SHT31
+  //  sht.begin(SHT31_ADDRESS);
+  //  uint16_t stat = sht.readStatus();
+  //  Serial.println();
 
-//  // start accelerometer
-//  if (!accel.begin()) {
-//    Serial.println("No ADXL345 detected");
-//    while (1);
-//  }
-//  accel.setRange(ADXL345_RANGE_16_G);
-//
-//  // start current sensor
-//  ACS.autoMidPoint();
+  // start accelerometer
+  if (!accel.begin()) {
+    Serial.println("No ADXL345 detected");
+    while (1);
+  }
+  accel.setRange(ADXL345_RANGE_16_G);
+
+  //  // start current sensor
+  //  ACS.autoMidPoint();
+  r = 2.0;
 }
 
 void loop() {
@@ -41,12 +42,12 @@ void loop() {
     MYSQL_DISPLAY("\nConnect success");
 
     // functions to be executed in the program
-    tempHumidity();
+    //  tempHumidity();
     // accelerometer();
     // current();
     // gasSensor();
     // runInsert();
-    conn.close();
+    // conn.close();
   }
 
   else MYSQL_DISPLAY("\nConnect failed");
@@ -54,20 +55,20 @@ void loop() {
   //  End of loop function
 }
 
-void tempHumidity() {
-  start = micros();
-  sht.read();
-  stop = micros();
-  float float_tempReading = sht.getTemperature();
-  Serial.print("T = ");
-  Serial.print(float_tempReading, 1);
-  Serial.print("C\tH = ");
-  float float_humidityReading = sht.getHumidity();
-  Serial.print(float_humidityReading, 1);
-  Serial.println("%");
-  delay(100);
-  //  End of tempeHumidity function
-}
+//void tempHumidity() {
+//  start = micros();
+//  sht.read();
+//  stop = micros();
+//  float float_tempReading = sht.getTemperature();
+//  Serial.print("T = ");
+//  Serial.print(float_tempReading, 1);
+//  Serial.print("C\tH = ");
+//  float float_humidityReading = sht.getHumidity();
+//  Serial.print(float_humidityReading, 1);
+//  Serial.println("%");
+//  delay(100);
+//  //  End of tempeHumidity function
+//}
 
 //void accelerometer() { // c/o Melvin, do not touch
 //  sensors_event_t event;
@@ -105,7 +106,7 @@ void tempHumidity() {
 //  Serial.print("A: ");
 //  delay(100);
 //}
-
+//
 //void gasSensor() {
 //  vout_adc = analogRead(VOUT);
 //  vref_adc = analogRead(VREF);
@@ -126,35 +127,35 @@ void runInsert() {  // connect and upload to a mysql database
   if (conn.connected()) {
     // Convert floats to strings before insert
     // dtostf == double to string
-    dtostrf(tempReading_float, 4, 2, temp_char);
+    //    dtostrf(tempReading_float, 4, 2, temp_char);
     //    dtostrf(humidityReading_float, 4, 2, hmd_char);
-    //    dtostrf(r, 4, 2, r_char);
+    dtostrf(r, 4, 2, r_char);
     //    dtostrf(currentReading_float, 4, 2, current_char);
     //    dtostrf(vout_float, 4, 2, vref_char);
     //    dtostrf(vref_float, 4, 2, vref_char);
 
     // Insert char strings to placeholders in single query string
     // sprintf == string print
-    sprintf(query1, INSERT_TEMPHMD, database, table1, device_id, temp_char, hmd_char);
-    //    sprintf(query2, INSERT_ACC, database, table2, device_id, r_char);
+    //    sprintf(query1, INSERT_TEMPHMD, database, table1, device_id, temp_char, hmd_char);
+    sprintf(query2, INSERT_ACC, database, table2, device_id, r_char);
     //    sprintf(query3, INSERT_CURRENT, database, table3, device_id, current_char);
     //    sprintf(query4, INSERT_GAS, database, table4, device_id, vout_char, vref_char);
 
-    // Execute query1 INSERT_TEMPHMD[]
-    MYSQL_DISPLAY1("Query1", query1);
-    // KH, check if valid before fetching
-    if (!query_mem.execute(query1)) {
-      MYSQL_DISPLAY("Query 1: Insert error");
-    }
-    else MYSQL_DISPLAY("Query 1: Data Inserted.");
-
-    //    // Execute query2 INSERT_ACC[]
-    //    MYSQL_DISPLAY1("Query2", query2);
-    //    if (!query_mem.execute(query2)) {
-    //      MYSQL_DISPLAY("Query 2: Insert error");
+    //    // Execute query1 INSERT_TEMPHMD[]
+    //    MYSQL_DISPLAY1("Query1", query1);
+    //    // KH, check if valid before fetching
+    //    if (!query_mem.execute(query1)) {
+    //      MYSQL_DISPLAY("Query 1: Insert error");
     //    }
-    //    else MYSQL_DISPLAY("Query 2: Data Inserted.");
-    //
+    //    else MYSQL_DISPLAY("Query 1: Data Inserted.");
+
+    // Execute query2 INSERT_ACC[]
+    MYSQL_DISPLAY1("Query2", query2);
+    if (!query_mem.execute(query2)) {
+      MYSQL_DISPLAY("Query 2: Insert error");
+    }
+    else MYSQL_DISPLAY("Query 2: Data Inserted.");
+
     //    // Execute query3 INSERT_CURRENT[]
     //    MYSQL_DISPLAY1("Query3", query3);
     //    if (!query_mem.execute(query3)) {
