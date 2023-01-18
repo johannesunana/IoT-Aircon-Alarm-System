@@ -20,8 +20,4 @@ char password[]     = "arduino";          // MySQL user login password
 
 char database[] = "adnu_acrms_4";
 
-char table1[]  = "data_temp_hmd";
-char table2[]  = "data_acc";
-char table3[]  = "data_amp";
-char table4[]  = "data_gas";
 #endif    //Credentials_h
