@@ -11,7 +11,7 @@ void setup() {
   Serial.begin(115200);
 
   // start SHT31
-  //  sht.begin(SHT31_ADDRESS);
+  sht.begin(SHT31_ADDRESS);
 
   // start I2C
   Wire.begin();
@@ -59,16 +59,16 @@ void loop() {
 
 void tempHumidity() {
   start = micros();
-  //  sht.read();
+  sht.read();
   stop = micros();
-  //  float float_tempReading = sht.getTemperature();
+  float float_tempReading = sht.getTemperature();
   Serial.print("T = ");
-  float float_tempReading = 36.5;
-  Serial.print(float_tempReading, 1);
+  tempReading_float = 36.5;
+  Serial.print(tempReading_float, 1);
   Serial.print("C\tH = ");
-  //  float float_humidityReading = sht.getHumidity();
-  float_humidityReading = 67.0;
-  Serial.print(float_humidityReading, 1);
+  float float_humidityReading = sht.getHumidity();
+  humidityReading_float = 67.0;
+  Serial.print(humidityReading_float, 1);
   Serial.println("%");
   delay(100);
   //  End of tempeHumidity function
@@ -131,8 +131,8 @@ void runInsert() {  // connect and upload to a mysql database
   if (conn.connected()) {
     //    // Convert floats to strings before insert
     //    // dtostf == double to string
-    //    dtostrf(tempReading_float, 4, 2, temp_char);
-    //    dtostrf(humidityReading_float, 4, 2, hmd_char);
+    dtostrf(tempReading_float, 4, 2, temp_char);
+    dtostrf(humidityReading_float, 4, 2, hmd_char);
     dtostrf(r, 4, 2, r_char);
     //    dtostrf(currentReading_float, 4, 2, current_char);
     //    dtostrf(vout_float, 4, 2, vref_char);
@@ -140,18 +140,18 @@ void runInsert() {  // connect and upload to a mysql database
 
     // Insert char strings to placeholders in single query string
     // sprintf == string print
-    //    sprintf(query1, INSERT_TEMPHMD, database, table1, device_id, temp_char, hmd_char);
+    sprintf(query1, INSERT_TEMPHMD, database, table1, device_id, temp_char, hmd_char);
     sprintf(query2, INSERT_ACC, database, table2, device_id, r_char);
     //    sprintf(query3, INSERT_CURRENT, database, table3, device_id, current_char);
     //    sprintf(query4, INSERT_GAS, database, table4, device_id, vout_char, vref_char);
 
-    // Execute query1 INSERT_TEMPHMD[]
-    //    MYSQL_DISPLAY1("Query1", query1);
-    //    // KH, check if valid before fetching
-    //    if (!query_mem.execute(query1)) {
-    //      MYSQL_DISPLAY("Query 1: Insert error");
-    //    }
-    //    else MYSQL_DISPLAY("Query 1: Data Inserted.");
+    //     Execute query1 INSERT_TEMPHMD[]
+    MYSQL_DISPLAY1("Query1", query1);
+    // KH, check if valid before fetching
+    if (!query_mem.execute(query1)) {
+      MYSQL_DISPLAY("Query 1: Insert error");
+    }
+    else MYSQL_DISPLAY("Query 1: Data Inserted.");
 
     //   Execute query2 INSERT_ACC[]
     MYSQL_DISPLAY1("Query2", query2);
