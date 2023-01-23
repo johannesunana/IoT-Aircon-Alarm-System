@@ -3,14 +3,19 @@
 
 /* I. Definitions */
 #define   SHT31_ADDRESS 0x44
-//#define   IOUT          39    // input for current sensor Vout
-//#define   VOUT          35    // input for freon sensor Vout
-//#define   VREF          33    // input for freon sensor Vref
+#define   IOUT          39    // input for current sensor Vout
+#define   VOUT          35    // input for freon sensor Vout
+#define   VREF          33    // input for freon sensor Vref
 #define   MYSQL_DEBUG_PORT      Serial
 #define   _MYSQL_LOGLEVEL_      3
-//#define ENABLE_TEMPHUMIDITY     true
-//#define ENABLE_ACCELEROMETER    true
-//#define ENABLE_CURRENT          true
+int LED_BUILTIN = 2;
+float vin = 5.00;     // Vin for ADC
+
+#define ENABLE_TEMPHUMIDITY     true
+#define ENABLE_ACCELEROMETER    true
+#define ENABLE_CURRENT          true
+#define ENABLE_GAS              true
+#define ENABLE_UPLOAD           true
 
 #include <Wire.h>                 // I2C 
 #include <SHT31.h>                // RobTillaart/SHT31 0.3.7
@@ -19,31 +24,42 @@
 #include <MySQL_Generic.h>        // khoih-prog/MySQL_MariaDB_Generic 1.7.2
 
 /* II. Required variables for digital and analog sensors */
+
+#if ENABLE_TEMPHUMIDITY
 // A) SHT31 temperature humidity sensor
 SHT31 sht;
 bool enableHeater = false;
 uint32_t start;
 uint32_t stop;
 float tempReading_float, humidityReading_float;
+#endif
 
-// B) ACS712 analog current sensor
-//ACS712  ACS(IOUT, 3.3, 4095, 185);
-//float currentReading_float;
-
-// C) ADXL345 digital accelerometer
+#if ENABLE_ACCELEROMETER
+// B) ADXL345 digital accelerometer
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified();
 float x2, x3, y2, y3, z2, z3, r, r2;
 float d = 0;      // determining condition
 float dx, dy, dz, dr;
 float t, h;
+#endif
 
+#if ENABLE_CURRENT
+// C) ACS712 analog current sensor
+ACS712  ACS(IOUT, 3.3, 4095, 185);
+float currentReading_float;
+#endif
+
+#if ENABLE_GAS
 // D) FCM2630-C01 freon sensor
-//float vout_adc, vref_adc; // initial values from analogRead
-//float vout_float, vref_float;  // converted to volts
+float vout_adc, vref_adc; // initial values from analogRead
+float vout_float, vref_float;  // converted to volts
+byte vout_status, vref_status, alarm_status;
+#endif
 
 // E) Device ID
 byte device_id = 1;
 
+#if ENABLE_UPLOAD
 // F) MySQL Connector
 // 1 Initialize MySQL_MariaDB_Generic library
 MySQL_Connection conn((Client *)&client);
@@ -53,7 +69,6 @@ char INSERT_TEMPHMD[] = "INSERT INTO %s.%s (device_id, temp_data, hmd_data) VALU
 char INSERT_ACC[] = "INSERT INTO %s.%s (device_id, r_data) VALUES (%d, %s)";
 char INSERT_CURRENT[] = "INSERT INTO %s.%s (device_id, amp_data) VALUES (%d, %s)";
 char INSERT_GAS[] = "INSERT INTO %s.%s (device_id, vout_data, vref_data, vout_status, vref_status, alarm_status) VALUES (%d, %s, %s, %d, %d, %d)";
-byte vout_status, vref_status, alarm_status;
 
 // char variables for sql script
 char query1[200];   // INSERT_TEMPHMD[]
@@ -73,5 +88,6 @@ char table1[]  = "data_temp_hmd";
 char table2[]  = "data_vibration";    // table renamed at database
 char table3[]  = "data_amp";
 char table4[]  = "data_gas";
+#endif
 
 #endif Defines
