@@ -9,6 +9,7 @@
 
 void setup() {
   Serial.begin(115200);
+  pinMode (LED_BUILTIN, OUTPUT);
 
   // start SHT31
   sht.begin(SHT31_ADDRESS);
@@ -16,11 +17,6 @@ void setup() {
   // start I2C
   Wire.begin();
   Wire.setClock(100000);
-
-  // SHT31 additional setup
-  //  uint16_t stat = sht.readStatus();
-  //  Serial.print(stat, HEX);
-  //  Serial.println();
 
   //  start accelerometer
   if (!accel.begin()) {
@@ -30,7 +26,7 @@ void setup() {
   accel.setRange(ADXL345_RANGE_16_G);
 
   // start current sensor
-  //  ACS.autoMidPoint();
+  ACS.autoMidPoint();
 
   WiFi.begin(ssid, pass);         // missing for three days???
   while (WiFi.status() != WL_CONNECTED) {
@@ -47,8 +43,8 @@ void loop() {
     // functions to be executed in the program
     tempHumidity();
     accelerometer();
-    // current();
-    // gasSensor();
+    current();
+    gasSensor();
     runInsert();
     conn.close();
   }
@@ -57,6 +53,7 @@ void loop() {
   //  End of loop function
 }
 
+#if ENABLE_TEMPHUMIDITY
 void tempHumidity() {
   start = micros();
   sht.read();
@@ -73,6 +70,7 @@ void tempHumidity() {
   delay(100);
   //  End of tempeHumidity function
 }
+#endif
 
 void accelerometer() { // c/o Melvin, do not touch
   sensors_event_t event;
@@ -98,29 +96,50 @@ void accelerometer() { // c/o Melvin, do not touch
     }
   }
   d++;
-  delay(250);
+  delay(100);
   Serial.print("R = ");
   Serial.println(r);
-  Serial.println();
   //  End of accelerometer function
 }
 
 void current() {
-  //  currentReading_float = ACS.mA_AC() / 1000;
-  //  Serial.print("A: ");
-  //  delay(100);
+  currentReading_float = ACS.mA_AC() / 1000;
+  Serial.print("A: ");
+  Serial.println(currentReading_float);
+  delay(100);
+  // End of current function
 }
 
 void gasSensor() {
-  //  vout_adc = analogRead(VOUT);
-  //  vref_adc = analogRead(VREF);
-  //  Serial.print("VOUT = ");
-  //  Serial.print(vout_float);
-  //  Serial.print("\t\tVREF");
-  //  Serial.print(vref_float);
-  //  delay(250);
-  //  //  dtostrf(vout_float, 4, 2, vout_char);
-  //  //  dtostrf(vref_float, 4, 2, vref_char);
+  vout_adc = analogRead(VOUT);
+  vout_float = (vout_adc * vin) / 1023;
+  vref_adc = analogRead(VREF);
+  vref_float = (vref_adc * vin) / 1023;
+
+  if (vout_float < 0.05 || vout_float > 4.95) {
+    vout_status = 1;        // malfunction
+  }
+  else vout_status = 0;     // normal
+
+  if (vref_float < 2.50 || vref_float > 3.70) {
+    vref_status = 1;        // malfunction
+  }
+  else vref_status = 0;     // normal
+
+  if (vout_status == 1 || vref_status == 1) {
+    alarm_status = 2;       // malfunction state
+  }
+  else if (vout_status == 0 || vref_status == 0) {
+    if (vout_float >= vref_float) {
+      alarm_status = 1;     // alarm state
+    }
+    else alarm_status = 0;  // normal state
+  }
+  Serial.print("VOut = ");
+  Serial.print(vout_float);
+  Serial.print("\tVRef");
+  Serial.println(vref_float);
+  delay(100);
   //  End of gasSensor function
 }
 
@@ -129,21 +148,22 @@ void runInsert() {  // connect and upload to a mysql database
   MySQL_Query query_mem = MySQL_Query(&conn);
 
   if (conn.connected()) {
-    //    // Convert floats to strings before insert
-    //    // dtostf == double to string
+    digitalWrite(LED_BUILTIN, HIGH);
+    //  Convert floats to strings before insert
+    //  dtostf == double to string
     dtostrf(tempReading_float, 4, 2, temp_char);
     dtostrf(humidityReading_float, 4, 2, hmd_char);
     dtostrf(r, 4, 2, r_char);
-    //    dtostrf(currentReading_float, 4, 2, current_char);
-    //    dtostrf(vout_float, 4, 2, vref_char);
-    //    dtostrf(vref_float, 4, 2, vref_char);
+    dtostrf(currentReading_float, 4, 2, current_char);
+    dtostrf(vout_float, 4, 2, vout_char);
+    dtostrf(vref_float, 4, 2, vref_char);
 
     // Insert char strings to placeholders in single query string
     // sprintf == string print
     sprintf(query1, INSERT_TEMPHMD, database, table1, device_id, temp_char, hmd_char);
     sprintf(query2, INSERT_ACC, database, table2, device_id, r_char);
-    //    sprintf(query3, INSERT_CURRENT, database, table3, device_id, current_char);
-    //    sprintf(query4, INSERT_GAS, database, table4, device_id, vout_char, vref_char);
+    sprintf(query3, INSERT_CURRENT, database, table3, device_id, current_char);
+    sprintf(query4, INSERT_GAS, database, table4, device_id, vout_char, vref_char, vout_status, vref_status, alarm_status);
 
     //     Execute query1 INSERT_TEMPHMD[]
     MYSQL_DISPLAY1("Query1", query1);
@@ -161,18 +181,19 @@ void runInsert() {  // connect and upload to a mysql database
     else MYSQL_DISPLAY("Query 2: Data Inserted.");
 
     // Execute query3 INSERT_CURRENT[]
-    //    MYSQL_DISPLAY1("Query3", query3);
-    //    if (!query_mem.execute(query3)) {
-    //      MYSQL_DISPLAY("Query 3: Insert error");
-    //    }
-    //    else MYSQL_DISPLAY("Query 3: Data Inserted.");
+    MYSQL_DISPLAY1("Query3", query3);
+    if (!query_mem.execute(query3)) {
+      MYSQL_DISPLAY("Query 3: Insert error");
+    }
+    else MYSQL_DISPLAY("Query 3: Data Inserted.");
 
     // Execute query4 INSERT_GAS[]
-    //    MYSQL_DISPLAY1("Query4", query4);
-    //    if (!query_mem.execute(query4)) {
-    //      MYSQL_DISPLAY("Query 4: Insert error");
-    //    }
-    //    else MYSQL_DISPLAY("Query 4: Data Inserted.");
+    MYSQL_DISPLAY1("Query4", query4);
+    if (!query_mem.execute(query4)) {
+      MYSQL_DISPLAY("Query 4: Insert error");
+    }
+    else MYSQL_DISPLAY("Query 4: Data Inserted.");
+    digitalWrite(LED_BUILTIN, LOW);
   }
   else MYSQL_DISPLAY("Disconnected from Server. Can't insert.");
   //  End of runInsert function
