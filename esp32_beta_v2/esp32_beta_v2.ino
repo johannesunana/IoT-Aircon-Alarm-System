@@ -28,7 +28,8 @@ void setup() {
   // start current sensor
   ACS.autoMidPoint();
 
-  WiFi.begin(ssid, pass);         // missing for three days???
+  WiFi.begin(ssid, pass);
+//  WiFi.mode(WIFI_STA);      // station mode, ESP32 connects to an access point
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     MYSQL_DISPLAY0(".");
@@ -39,7 +40,6 @@ void loop() {
   MYSQL_DISPLAY("Connecting to server");
   if (conn.connectNonBlocking(server_addr, server_port, user, password) != RESULT_FAIL) {
     MYSQL_DISPLAY("\nConnect success");
-
     // functions to be executed in the program
     tempHumidity();
     accelerometer();
@@ -49,7 +49,7 @@ void loop() {
     conn.close();
   }
   else MYSQL_DISPLAY("\nConnect failed");
-  delay(3000);   // repeat loop after 5 seconds
+  delay(3000);   // repeat loop after 3 seconds
   //  End of loop function
 }
 
