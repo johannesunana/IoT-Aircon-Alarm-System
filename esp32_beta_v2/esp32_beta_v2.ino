@@ -1,8 +1,8 @@
-// Integrated data gathering module
+// Integrated sketch for data gathering module
 // Board: ESP32 Dev Module
-// Using espressif/arduino-esp32 2.0.5
-// Updated: January 2023
-// Created by: Johannes Unana, Melvin Sta. Rosa
+// Using espressif/arduino-esp32 2.0.7
+// Updated: April 2023
+// Created by: Johannes Unana, Melvin Sta. Rosa Jr.
 
 #include "Credentials.h"
 #include "Defines.h"
@@ -26,8 +26,8 @@ void setup() {
   accel.setRange(ADXL345_RANGE_16_G);
 
   // start current sensor
-  ACS.autoMidPoint();
-
+float _offset = ACS712.autoCalibrate();   // Must ensure there no current passing through the sensors
+ACS712.reset();
   WiFi.begin(ssid, pass);
 //  WiFi.mode(WIFI_STA);      // station mode, ESP32 connects to an access point
   while (WiFi.status() != WL_CONNECTED) {
@@ -58,13 +58,13 @@ void tempHumidity() {
   start = micros();
   sht.read();
   stop = micros();
-  float float_tempReading = sht.getTemperature();
+  float tempReading_float = sht.getTemperature();
   Serial.print("T = ");
-  tempReading_float = 36.5;
+  //  tempReading_float = 36.5;         // sample reading for test upload, comment when using sensor
   Serial.print(tempReading_float, 1);
   Serial.print("C\tH = ");
-  float float_humidityReading = sht.getHumidity();
-  humidityReading_float = 67.0;
+  float humidityReading_float = sht.getHumidity();
+  // humidityReading_float = 67.0;      // sample reading for test upload, comment when using sensor
   Serial.print(humidityReading_float, 1);
   Serial.println("%");
   delay(100);
@@ -72,7 +72,7 @@ void tempHumidity() {
 }
 #endif
 
-void accelerometer() { // c/o Melvin, do not touch
+void accelerometer() { // c/o Melvin, do not modify if unsure
   sensors_event_t event;
   accel.getEvent(&event);
   if (d <= 0) {
@@ -103,7 +103,7 @@ void accelerometer() { // c/o Melvin, do not touch
 }
 
 void current() {
-  currentReading_float = ACS.mA_AC() / 1000;
+  currentReading_float = ACS712.getAC(60, 0.5));
   Serial.print("A: ");
   Serial.println(currentReading_float);
   delay(100);
@@ -150,7 +150,7 @@ void runInsert() {  // connect and upload to a mysql database
   if (conn.connected()) {
     digitalWrite(LED_BUILTIN, HIGH);
     //  Convert floats to strings before insert
-    //  dtostf == double to string
+    //  dtostf == double to string function
     dtostrf(tempReading_float, 4, 2, temp_char);
     dtostrf(humidityReading_float, 4, 2, hmd_char);
     dtostrf(r, 4, 2, r_char);
