@@ -24,4 +24,4 @@ $RECYCLE.BIN/
 *.lnk
 
 # Library files for Arduino IDE
-libraries/
+# libraries/
