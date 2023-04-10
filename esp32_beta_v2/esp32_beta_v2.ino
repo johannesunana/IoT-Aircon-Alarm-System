@@ -112,9 +112,9 @@ void current() {
 
 void gasSensor() {
   vout_adc = analogRead(VOUT);
-  vout_float = (vout_adc * vin) / 1023;
+  vout_float = (vout_adc * vin) / 4095;
   vref_adc = analogRead(VREF);
-  vref_float = (vref_adc * vin) / 1023;
+  vref_float = (vref_adc * vin) / 4095;
 
   if (vout_float < 0.05 || vout_float > 4.95) {
     vout_status = 1;        // malfunction
