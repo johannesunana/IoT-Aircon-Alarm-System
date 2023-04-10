@@ -2,7 +2,7 @@
 // Board: ESP32 Dev Module
 // Using espressif/arduino-esp32 2.0.7
 // Updated: April 2023
-// Created by: Johannes Unana, Melvin Sta. Rosa Jr.
+// Created by: Johannes Unana, Melvin Sta. Rosa Jr., Bon Joey Pintant
 
 #include "Credentials.h"
 #include "Defines.h"
@@ -26,8 +26,8 @@ void setup() {
   accel.setRange(ADXL345_RANGE_16_G);
 
   // start current sensor
-float _offset = ACS712.autoCalibrate();   // Must ensure there no current passing through the sensors
-ACS712.reset();
+ACS.autoMidPoint();
+
   WiFi.begin(ssid, pass);
 //  WiFi.mode(WIFI_STA);      // station mode, ESP32 connects to an access point
   while (WiFi.status() != WL_CONNECTED) {
@@ -103,7 +103,7 @@ void accelerometer() { // c/o Melvin, do not modify if unsure
 }
 
 void current() {
-  currentReading_float = ACS712.getAC(60, 0.5));
+  currentReading_float = ACS.mA_AC() / 1000;
   Serial.print("A: ");
   Serial.println(currentReading_float);
   delay(100);

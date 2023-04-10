@@ -20,7 +20,7 @@ float vin = 5.00;     // Vin for ADC
 #include <Wire.h>                 // I2C 
 #include <SHT31.h>                // RobTillaart/SHT31 0.3.7
 #include <Adafruit_ADXL345_U.h>   // adafruit/Adafruit_ADXL345 1.3.2
-#include <ACS712.h>               // ElectroRush4u/ACS712
+#include <ACS712.h>               // RobTillaart/ACS712 0.3.5
 #include <MySQL_Generic.h>        // khoih-prog/MySQL_MariaDB_Generic 1.7.2
 
 /* II. Required variables for digital and analog sensors */
@@ -45,8 +45,10 @@ float t, h;
 
 #if ENABLE_CURRENT
 // C) ACS712 analog current sensor
-ACS712XX ACS712(ACS712_20A, 39, 3.3, 4095);   // GPIO39 ON ESP32
-// ACS712XX ACS712(ACS712_20A, A0, 5, 1023);       // A0 ON GIZDUINO UNO
+ACS712 ACS(IOUT, 3.3, 4095, 58.67);
+// using voltage divider R1 = 10k R2 = 20k
+// voltage factor = 0.6667
+// mVperAmp corrected = 100 * 0.6667 * 0.88 (12% loss from 5V source) = 58.67
 float currentReading_float;
 #endif
 
