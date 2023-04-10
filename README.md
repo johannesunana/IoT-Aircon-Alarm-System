@@ -36,6 +36,6 @@
    byte device_id = 1;		// device id of module
    ```
 
-5. Copy all files from <u>libraries</u> folder to <u>%USERPROFILE%\Documents\Arduino\libraries</u>.
+5. Download required libraries using Arduino IDE to <u>%USERPROFILE%\Documents\Arduino\libraries</u>.
 
-6. Using Arduino IDE, upload <u>esp32_beta_v2.ino</u> to ESP32 Dev Module.
+6. Upload <u>esp32_beta_v2.ino</u> to ESP32 Dev Module.
